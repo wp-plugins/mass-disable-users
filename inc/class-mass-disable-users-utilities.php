@@ -141,7 +141,8 @@ class Mass_Disable_Users_Utilities {
   public function set_to_confirm() {
   
     $csv = $this->get_csv();
-    $to_confirm = $this->compare_users( $csv );
+    $compared = $this->compare_users( $csv );
+    $to_confirm = $this->remove_subscribers( $compared );
 
     $this->to_confirm = $to_confirm;
   
@@ -231,6 +232,88 @@ class Mass_Disable_Users_Utilities {
   
   }
 
+  private function remove_subscribers( $users ) {
+  
+    foreach( $users as $u ) {
+      if( email_exists( $u ) ) {
+        $user['id'] = email_exists( $u );
+        $user['email'] = $u;
+
+        $all_users[] = $user;
+      }
+    }
+
+    foreach( $all_users as $k => $u ) {
+      $blogs = get_blogs_of_user( $u['id'] );
+
+
+      // Search each user's blog. If they are only a subscriber, drop them.
+      foreach( $blogs as $b ) {
+
+        $blogid = $b->userblog_id;
+        switch_to_blog( $blogid );
+        $roles[] = $this->get_blog_role( $u['id'], $blogid );
+
+      }
+
+      // The $roles array is pretty messy. Clean it up!
+      if( ! empty( $roles) ) {
+        foreach( $roles as $role ) {
+          $clean_roles[] = $role[0];
+        }
+      } else {
+        unset( $all_users[$k] );
+      }
+
+      // Create testing array
+      if( ! empty( $clean_roles ) ) {
+        foreach( $clean_roles as $role ) {
+          if( $role == 'subscriber' ){
+            $test[] = TRUE;
+          } else {
+            $test[] = FALSE;
+          }
+        }
+      }
+
+      // Get rid of users with zero permissions
+      if( $test === null ) {
+        unset( $all_users[$k] );
+      }
+
+      // Unset users who are ONLY subscribers
+      if( ! $test == null ){
+        if( ! in_array( FALSE, $test ) ) {
+          unset( $all_users[$k] );
+        }
+      }
+
+      // Clean-up
+      unset($test);
+      unset( $clean_roles );
+      unset( $roles );
+    }
+  
+    // Construct the array for returning
+    foreach( $all_users as $u ) {
+      $emails[] = $u['email'];
+    }
+    return $emails;
+
+  }
+
+  private function get_blog_role( $user, $blogid ) {
+    $theuser = new WP_User( $user, $blogid );
+
+    if( ! empty( $theuser->roles) && is_array( $theuser->roles ) ) {
+      foreach( $theuser->roles as $role ) {
+        $userroles[] = $role;
+      }
+    }
+    return $userroles;
+
+  }
+
   /**
    * Wrapper for explode()
    *
@@ -257,7 +340,7 @@ class Mass_Disable_Users_Utilities {
    */
   public function array_to_string( $array ) {
   
-    $string = implode( "\n", $array );
+    $string = implode( "\r\n", $array );
 
     return $string;
   
