@@ -10,4 +10,22 @@
  * License: GPL2
  */
 
+require_once( 'inc/class-mass-disable-users-utilities.php' );
+require_once( 'inc/class-mass-disable-users-admin.php' );
 
+if( ! array_key_exists( 'mass-disable-users', $GLOBALS ) ) {
+
+  class Mass_Disable_Users {
+    
+    function __construct() {
+
+      $this->utilities = new Mass_Disable_Users_Utilities;
+      $this->admin = new Mass_Disable_Users_Admin;
+
+    } // end function __construct()
+
+  } // end class Mass_Disable_Users
+
+  $GLOBALS['mass-disable-users'] = new Mass_Disable_Users;
+
+} // endif
