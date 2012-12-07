@@ -5,6 +5,7 @@ class Mass_Disable_Users_Utilities {
   protected $exceptions;
   protected $csv;
   protected $users;
+  protected $to_confirm;
   protected $to_disable;
 
 
@@ -14,7 +15,7 @@ class Mass_Disable_Users_Utilities {
    */
   public function add_options() {
   
-    add_option( 'mdu_email_exceptions', array( 'agrilifeweb@tamu.edu' ) );
+    add_option( 'mdu_email_exceptions', array( 'agrilifeweb@tamu.edu', 'test@test.com' ) );
   
   }
 
@@ -23,10 +24,10 @@ class Mass_Disable_Users_Utilities {
    *
    * @param string $exceptions Delimited list of email addresses to exclude from disable list.
    */
-  public function set_exceptions( $exceptions ) {
+  public function set_exceptions( $string ) {
   
     // Convert exceptions to array
-    $exceptions = $this->string_to_array( $exceptions );
+    $exceptions = $this->string_to_array( $string );
 
     update_option( 'mdu_email_exceptions', $exceptions );
 
@@ -71,8 +72,17 @@ class Mass_Disable_Users_Utilities {
   private function parse_csv( $filename ) {
   
     $file = fopen( $filename, 'r' );
-    $file = fread( $file, filesize($filename) );
-    $users = str_getcsv( $file );
+    while( ! feof( $file ) ) {
+      $user_array[] = fgetcsv( $file );
+    }
+
+    // Since fgetcsv returns a multi-dimensional array, we need to pull the email address out, making it an array value.
+    foreach ( $user_array as $u ) {
+      $users[] = $u[0];
+    }
+
+    // fgetcsv also returns false when it hits the end of a file, messing up our array. Let's pop that sucker off.
+    array_pop( $users );
 
     return $users;
   
@@ -98,7 +108,7 @@ class Mass_Disable_Users_Utilities {
   }
 
   /**
-   * Gets the email addresses of all existing users
+   * Pulls the email addresses of all existing users from the database
    *
    * @returns array $emails Array of all email addresses
    */
@@ -128,18 +138,18 @@ class Mass_Disable_Users_Utilities {
 
   }
 
-  public function set_to_disable() {
+  public function set_to_confirm() {
   
     $csv = $this->get_csv();
-    $to_disable = $this->compare_users( $csv );
+    $to_confirm = $this->compare_users( $csv );
 
-    $this->to_disable = $to_disable;
+    $this->to_confirm = $to_confirm;
   
   }
 
-  public function get_to_disable() {
+  public function get_to_confirm() {
   
-    return $this->to_disable;
+    return $this->to_confirm;
   
   }
 
@@ -160,17 +170,38 @@ class Mass_Disable_Users_Utilities {
   
   }
 
+  public function set_to_disable( $emails ) {
+  
+    foreach( $emails as $e ) {
+      $to_disable[] = email_exists( $e );
+    }
+
+    $this->to_disable = $to_disable;
+  
+  }
+
+  public function get_to_disable() {
+  
+    return $this->to_disable;
+  
+  }
+
   /**
    * Find and loop through a user's blogs
    * 
    * @param int $user The user's ID
    */
-  public function process_user_blogs( $user ) {
+  public function process_user_blogs() {
   
-    $user_blogs = get_blogs_of_user( $user );
-    foreach ( $user_blogs as $blog ) {
-      switch_to_blog( $blog->userblog_id );
-      $this->disable_user( $user );
+    foreach( $this->get_to_disable() as $user ) {
+
+      $user_blogs = get_blogs_of_user( $user );
+      
+      foreach ( $user_blogs as $blog ) {
+        switch_to_blog( $blog->userblog_id );
+        $this->disable_user( $user );
+      }
+
     }
   
   }
@@ -183,7 +214,7 @@ class Mass_Disable_Users_Utilities {
   public function disable_user( $user ) {
   
       $user = new WP_User( $user );
-      $user->remove_all_caps();
+      $user->set_role( 'subscriber' );
   
   }
 
@@ -197,7 +228,7 @@ class Mass_Disable_Users_Utilities {
    */
   public function string_to_array( $string ) {
   
-    $array = explode( '\n', $string );
+    $array = explode( "\r\n", $string );
 
     return $array;
   
@@ -213,7 +244,7 @@ class Mass_Disable_Users_Utilities {
    */
   public function array_to_string( $array ) {
   
-    $string = implode( '\n', $array );
+    $string = implode( "\n", $array );
 
     return $string;
   

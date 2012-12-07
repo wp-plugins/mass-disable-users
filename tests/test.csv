@@ -1,1 +1,5 @@
-user_1@example.org,user_2@example.org,user_3@example.org,exception1@example.org,exception2@example.org
+user_1@example.org
+user_2@example.org
+user_3@example.org
+exception1@example.org
+exception2@example.org

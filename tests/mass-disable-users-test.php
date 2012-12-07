@@ -65,7 +65,7 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
     
     $this->utility->add_options();
     $old = get_option( 'mdu_email_exceptions' );
-    $this->utility->set_exceptions( 'exception1@example.com' );
+    $this->utility->set_exceptions( 'exception1@example.com\ntest@test.com' );
     $new = get_option( 'mdu_email_exceptions' );
     $this->assertFalse( $old == $new );
 
@@ -113,7 +113,7 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
     foreach ( $blog_ids as $blog ) {
       $user = new WP_User( $user_id );
 
-      if ( ! $user->has_cap( 'read' ) ) {
+      if ( ! $user->get( 'role' ) == 'subscriber' ) {
         $actual[$blog] = 'disabled';
       }
 
@@ -141,7 +141,7 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
     foreach ( $users as $id ) {
       $user = new WP_User( $id );
 
-      if ( ! $user->has_cap('read') ) {
+      if ( ! $user->has_cap('edit_posts') ) {
         $users[$id] = 'disabled';
       }
       // Create the expected array based on the ID's of the created users
@@ -194,7 +194,8 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
       'user_3@example.org',
       'exception1@example.org',
       'exception2@example.org',
-      'agrilifeweb@tamu.edu'
+      'agrilifeweb@tamu.edu',
+      'test@test.com'
     );
 
 
@@ -236,9 +237,9 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
 
     $this->utility->set_csv( $file );
 
-    $this->utility->set_to_disable();
+    $this->utility->set_to_confirm();
 
-    $actual = $this->utility->get_to_disable();
+    $actual = $this->utility->get_to_confirm();
 
     $actual = array_values( $actual );
 
