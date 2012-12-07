@@ -19,11 +19,14 @@ if( ! array_key_exists( 'mass-disable-users', $GLOBALS ) ) {
     
     function __construct() {
 
-      $this->utilities = new Mass_Disable_Users_Utilities;
+      $this->utility = new Mass_Disable_Users_Utilities;
       $this->admin = new Mass_Disable_Users_Admin;
 
-      // Add submenu to Network Users
+      // Setup network admin area
       add_action( 'init', array( $this->admin, 'init' ) );
+
+      // Setup options
+      add_action( 'init', array( $this->utility, 'add_options' ) );
 
     } // end function __construct()
 
