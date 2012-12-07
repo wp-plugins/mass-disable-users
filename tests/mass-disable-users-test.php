@@ -108,7 +108,10 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
       add_user_to_blog( $blog, $user, 'editor' );
     }
     
-    $this->utility->process_user_blogs( $user_id );
+    $this->utility->set_users();
+    $to_disable = $this->utility->get_users();
+    $this->utility->set_to_disable( $to_disable );
+    $this->utility->process_user_blogs();
 
     foreach ( $blog_ids as $blog ) {
       $user = new WP_User( $user_id );
@@ -253,6 +256,28 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
   
   }
 
+  public function testCountToConfirm() {
+  
+    $user_ids = $this->factory->user->create_many(5);
+
+    $this->utility->set_users();
+
+    $this->utility->add_options();
+
+    $path = dirname(__FILE__);
+    $file = $path . '/test.csv';
+
+    $this->utility->set_csv( $file );
+
+    $this->utility->set_to_confirm();
+
+    $actual = $this->utility->count_to_confirm();
+
+    $expected = 3;
+
+    $this->assertSame( $actual, $expected );
+  
+  }
   public function teststring() {
   
     return 'test@test.com\naaron@test.com\ntravis@test.com';

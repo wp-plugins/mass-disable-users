@@ -78,7 +78,7 @@ class Mass_Disable_Users_Utilities {
 
     // Since fgetcsv returns a multi-dimensional array, we need to pull the email address out, making it an array value.
     foreach ( $user_array as $u ) {
-      $users[] = $u[0];
+      $users[] = strtolower($u[0]);
     }
 
     // fgetcsv also returns false when it hits the end of a file, messing up our array. Let's pop that sucker off.
@@ -125,7 +125,7 @@ class Mass_Disable_Users_Utilities {
 
     foreach( $all_users as $id ) {
       $user = get_userdata( $id );
-      $emails[] = $user->user_email;
+      $emails[] = strtolower($user->user_email);
     }
 
     $this->users = $emails;
@@ -153,6 +153,16 @@ class Mass_Disable_Users_Utilities {
   
   }
 
+  public function count_to_confirm() {
+  
+    $d = $this->get_to_confirm();
+
+    $count = count( $d );
+
+    return $count;
+  
+  }
+
   /**
    * Compares existing users with those provided in the CSV and exceptions
    *
@@ -173,7 +183,9 @@ class Mass_Disable_Users_Utilities {
   public function set_to_disable( $emails ) {
   
     foreach( $emails as $e ) {
-      $to_disable[] = email_exists( $e );
+      if( email_exists( $e ) ) {
+        $to_disable[] = email_exists( $e );
+      }
     }
 
     $this->to_disable = $to_disable;
@@ -185,6 +197,7 @@ class Mass_Disable_Users_Utilities {
     return $this->to_disable;
   
   }
+
 
   /**
    * Find and loop through a user's blogs

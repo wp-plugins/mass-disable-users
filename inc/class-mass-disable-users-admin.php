@@ -171,14 +171,22 @@ class Mass_Disable_Users_Admin {
 
   private function show_confirmation() {
   
-    $html = '<p>Use the checkboxes to select the accounts to disable</p>';
+    $html = '<h3>Step 4: Select the users to disable</h3>';
+    $html .= '<p>Use the checkboxes to select the accounts to disable</p>';
     $html .= '<form id="confirm-disable" action="" method="post" name="confirm-disable" >';
     $html .= '<table id="email-list" >';
     $html .= '<p>';
-    $html .= '<a href="#" class="select-all">Select All</a>';
-    $html .= ' / ';
-    $html .= '<a href="#" class="deselect-all">Deselect All</a>';
+    $html .= $this->utility->count_to_confirm();
+    $html .= ' users';
     $html .= '</p>';
+    $html .= '<tr>';
+    $html .= '<td>';
+    $html .= '<input type="checkbox" name="selectAll" id="selectAll" />';
+    $html .= '</td>';
+    $html .= '<td>';
+    $html .= 'Select All';
+    $html .= '</td>';
+    $html .= '</tr>';
 
     $to_confirm = $this->utility->get_to_confirm();
 
