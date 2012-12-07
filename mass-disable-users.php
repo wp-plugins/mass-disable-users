@@ -13,14 +13,14 @@
 require_once( 'inc/class-mass-disable-users-utilities.php' );
 require_once( 'inc/class-mass-disable-users-admin.php' );
 
-if( ! array_key_exists( 'mass-disable-users', $GLOBALS ) ) {
+if ( ! array_key_exists( 'mass-disable-users', $GLOBALS ) ) {
 
   class Mass_Disable_Users {
     
     function __construct() {
 
-      $this->utility = new Mass_Disable_Users_Utilities;
-      $this->admin = new Mass_Disable_Users_Admin;
+      $this->utility  = new Mass_Disable_Users_Utilities;
+      $this->admin    = new Mass_Disable_Users_Admin;
 
       // Setup network admin area
       add_action( 'init', array( $this->admin, 'init' ) );

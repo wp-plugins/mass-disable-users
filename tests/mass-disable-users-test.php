@@ -75,6 +75,7 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
   public function testEmailExceptionsRetrieve() {
     
     $exceptions = $this->teststring();
+    $this->utility->add_options();
     $this->utility->set_exceptions( $exceptions );
     $return = $this->utility->get_exceptions();
 
@@ -248,8 +249,6 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
 
     $expected = array(
       'admin@example.org',
-      'user_4@example.org',
-      'user_5@example.org'
     );
 
     $this->assertSame( $actual, $expected );
@@ -273,14 +272,52 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
 
     $actual = $this->utility->count_to_confirm();
 
-    $expected = 3;
+    $expected = 1;
 
     $this->assertSame( $actual, $expected );
   
   }
+
+  public function testNoSubscribers() {
+  
+    $user_ids = $this->factory->user->create_many(5);
+
+    $this->utility->set_users();
+
+    $this->utility->add_options();
+
+    $path = dirname(__FILE__);
+    $file = $path . '/test.csv';
+
+    $this->utility->set_csv( $file );
+    $this->utility->set_users();
+    $this->utility->set_to_confirm();
+
+    $to_confirm = $this->utility->get_to_confirm();
+    foreach( $to_confirm as $c ) {
+      $ids[] = email_exists( $c );
+    }
+
+    foreach( $ids as $id ) {
+      $blogs = get_blogs_of_user( $id );
+
+      foreach( $blogs as $b ) {
+        switch_to_blog( $b->userblog_id );
+        $theuser = new WP_User( $id, $b->userblog_id );
+        if( ! empty( $theuser->roles) && is_array( $theuser->roles ) ) {
+          foreach( $theuser->roles as $role ) {
+            $userroles[] = $role;
+          }
+        }
+      }
+    }
+
+    $this->assertNotContains( 'subscriber', $userroles );
+  
+  }
   public function teststring() {
   
-    return 'test@test.com\naaron@test.com\ntravis@test.com';
+    return "test@test.com\r\naaron@test.com\r\ntravis@test.com";
   
   }
 
