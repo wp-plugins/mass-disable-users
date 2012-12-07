@@ -11,14 +11,15 @@ require_once( ABSPATH . '/wp-content/plugins/mass-disable-users/inc/class-mass-d
 class Tests_Mass_Disable_Users extends WP_UnitTestCase {
 
   private $plugin;
+  private $admin;
   private $utility;
 
   public function setUp() {
 
     parent::setUp();
-    $this->plugin = $GLOBALS['mass-disable-users'];
-    $this->admin = $GLOBALS['mdu-admin'];
-    $this->utility = $GLOBALS['mdu-utilities'];
+    $this->plugin = new Mass_Disable_Users;
+    $this->admin = new Mass_Disable_Users_Admin;
+    $this->utility = new Mass_Disable_Users_Utilities;
 
   }
 
@@ -64,7 +65,7 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
     
     $this->utility->add_options();
     $old = get_option( 'mdu_email_exceptions' );
-    $this->utility->update_exceptions( 'exception1@example.com' );
+    $this->utility->set_exceptions( 'exception1@example.com' );
     $new = get_option( 'mdu_email_exceptions' );
     $this->assertFalse( $old == $new );
 
@@ -74,7 +75,7 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
   public function testEmailExceptionsRetrieve() {
     
     $exceptions = $this->teststring();
-    $this->utility->update_exceptions( $exceptions );
+    $this->utility->set_exceptions( $exceptions );
     $return = $this->utility->get_exceptions();
 
     $this->assertSame( $exceptions, $return );
@@ -160,41 +161,94 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
     $path = dirname(__FILE__);
     $file = $path . '/test.csv';
   
-    $actual = $this->utility->parse_csv( $file );
+    $this->utility->set_csv( $file );
+
+    $actual = $this->utility->get_csv();
 
     $expected = array(
-      'test1@example.com',
-      'test2@example.com',
-      'test3@example.com',
-      'exception1@example.com',
-      'exception2@example.com'
+      'user_1@example.org',
+      'user_2@example.org',
+      'user_3@example.org',
+      'exception1@example.org',
+      'exception2@example.org'
     );
 
     $this->assertSame( $expected, $actual );
   }
 
-  // Test comparing exceptions and CSV contents
-  public function testExceptionCompare () {
+  // Test combining CSV & exceptions into one array
+  public function testUserCombine() {
   
     $this->utility->add_options();
-    $exceptions = array(
-      'exception1@example.com',
-      'exception2@example.com'
-    );
-    update_option( 'mdu_email_exceptions', $exceptions );
 
     $path = dirname(__FILE__);
-    $filename = $path . '/test.csv';
-    $exceptions = get_option('mdu_email_exceptions');
-    $actual = $this->utility->compare_users( $filename, $exceptions );
+    $file = $path . '/test.csv';
+
+    $this->utility->set_csv($file);
+
+    $actual = $this->utility->combine_users();
 
     $expected = array(
-      'test1@example.com',
-      'test2@example.com',
-      'test3@example.com'
+      'user_1@example.org',
+      'user_2@example.org',
+      'user_3@example.org',
+      'exception1@example.org',
+      'exception2@example.org',
+      'agrilifeweb@tamu.edu'
     );
 
-    $this->assertSame( $expected, $actual );
+
+    $this->assertSame( $actual, $expected );
+  
+  }
+
+  // Test retrieving list of existing users by email
+  public function testSetUsers() {
+  
+    $user_ids = $this->factory->user->create_many( 9 );
+    
+    foreach( $user_ids as $id ) {
+      $user = get_userdata( $id );
+      $expected[] = $user->user_email;
+    }
+
+    $admin = 'admin@example.org';
+    array_unshift( $expected, $admin);
+
+    $this->utility->set_users();
+    $actual = $this->utility->get_users();
+
+    $this->assertSame( $actual, $expected );
+  
+  }
+
+  // Compare the CSV+exceptions array with users array
+  public function testCompareUsers() {
+  
+    $user_ids = $this->factory->user->create_many(5);
+
+    $this->utility->set_users();
+
+    $this->utility->add_options();
+
+    $path = dirname(__FILE__);
+    $file = $path . '/test.csv';
+
+    $this->utility->set_csv( $file );
+
+    $this->utility->set_to_disable();
+
+    $actual = $this->utility->get_to_disable();
+
+    $actual = array_values( $actual );
+
+    $expected = array(
+      'admin@example.org',
+      'user_4@example.org',
+      'user_5@example.org'
+    );
+
+    $this->assertSame( $actual, $expected );
   
   }
 
@@ -212,4 +266,5 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
       'travis@test.com'
     );
   }
+
 } 

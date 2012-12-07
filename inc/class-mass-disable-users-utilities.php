@@ -2,6 +2,12 @@
 
 class Mass_Disable_Users_Utilities {
 
+  protected $exceptions;
+  protected $csv;
+  protected $users;
+  protected $to_disable;
+
+
   /**
    * Creates the following options:
    * - Exceptions
@@ -17,12 +23,14 @@ class Mass_Disable_Users_Utilities {
    *
    * @param string $exceptions Delimited list of email addresses to exclude from disable list.
    */
-  public function update_exceptions( $exceptions ) {
+  public function set_exceptions( $exceptions ) {
   
     // Convert exceptions to array
     $exceptions = $this->string_to_array( $exceptions );
 
     update_option( 'mdu_email_exceptions', $exceptions );
+
+    $this->exceptions = $exceptions;
   
   }
 
@@ -40,6 +48,19 @@ class Mass_Disable_Users_Utilities {
     
   }
 
+  public function set_csv( $filename ) {
+  
+    $csv = $this->parse_csv( $filename );
+    $this->csv = $csv;
+  
+  }
+
+  public function get_csv() {
+    
+    return $this->csv;
+
+  }
+
   /**
    * Parses the CSV into array
    *
@@ -47,7 +68,7 @@ class Mass_Disable_Users_Utilities {
    *
    * @returns array $users Users in the CSV
    */
-  public function parse_csv( $filename ) {
+  private function parse_csv( $filename ) {
   
     $file = fopen( $filename, 'r' );
     $file = fread( $file, filesize($filename) );
@@ -58,19 +79,84 @@ class Mass_Disable_Users_Utilities {
   }
 
   /**
-   * Compares exceptions with provided CSV of users to disable
+   * Combines users from the provided CSV and the exceptions
    *
-   * @param string $filename
-   * @param array $exceptions
-   * @returns array $users Users to disable
+   * @param array $csv Array of user email addresses in the CSV
+   *
+   * @returns array $combined Combined array of users who should exist
    */
-  public function compare_users( $filename, $exceptions ) {
+  public function combine_users() {
   
-    $csv = $this->parse_csv( $filename );
+    $exceptions = get_option( 'mdu_email_exceptions' );
 
-    $users = array_diff( $csv, $exceptions);
+    $csv = $this->get_csv();
+    
+    $combined = array_merge( $csv, $exceptions );
 
-    return $users;
+    return $combined;
+
+  }
+
+  /**
+   * Gets the email addresses of all existing users
+   *
+   * @returns array $emails Array of all email addresses
+   */
+  public function set_users() {
+  
+    global $wpdb;
+
+    $sort = "ID";
+
+    $all_users = $wpdb->get_col( $wpdb->prepare(
+      "SELECT $wpdb->users.ID FROM $wpdb->users ORDER BY %s ASC",
+      $sort
+    ));
+
+    foreach( $all_users as $id ) {
+      $user = get_userdata( $id );
+      $emails[] = $user->user_email;
+    }
+
+    $this->users = $emails;
+  
+  }
+
+  public function get_users() {
+    
+    return $this->users;
+
+  }
+
+  public function set_to_disable() {
+  
+    $csv = $this->get_csv();
+    $to_disable = $this->compare_users( $csv );
+
+    $this->to_disable = $to_disable;
+  
+  }
+
+  public function get_to_disable() {
+  
+    return $this->to_disable;
+  
+  }
+
+  /**
+   * Compares existing users with those provided in the CSV and exceptions
+   *
+   * @returns array $to_disable Array of users to disable
+   */
+  private function compare_users( $csv ) {
+  
+    $combined = $this->combine_users( $csv );
+
+    $existing = $this->get_users();
+
+    $to_disable = array_diff( $existing, $combined );
+
+    return $to_disable;
   
   }
 

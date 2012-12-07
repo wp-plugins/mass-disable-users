@@ -70,6 +70,13 @@ class Mass_Disable_Users_Admin {
       $this->process_exceptions( $exceptions );
     }
 
+    if( isset( $_FILES['csv-file'] ) ) {
+      // Somtething here about processing
+      // Something here about getting $to_disable
+      // Something here about showing list of $to_disable
+      
+    }
+
     $html = '<div class="wrap">';
     $html .= screen_icon();
     $html .= '<h2>';
@@ -96,7 +103,7 @@ class Mass_Disable_Users_Admin {
 
     $html = '<h3>Step 1: Exclude email addresses</h3>';
     $html .= '<p>One address per line</p>';
-    $html .= '<form id="exceptions" action="" method="post">';
+    $html .= '<form id="exceptions" action="" method="post" enctype="multipart/form-data">';
     $html .= '<textarea name="exceptions" cols="40" rows="10">';
     $html .= $exceptions;
     $html .= '</textarea>';
