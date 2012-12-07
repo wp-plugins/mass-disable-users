@@ -27,6 +27,19 @@ class Mass_Disable_Users_Utilities {
   }
 
   /**
+   * Retrieves the array of exceptions
+   *
+   * @returns string $exceptions
+   */
+  public function get_exceptions() {
+  
+    $exceptions = get_option( 'mdu_email_exceptions' );
+    $exceptions = $this->array_to_string( $exceptions );
+    return $exceptions;
+    
+  }
+
+  /**
    * Wrapper for explode()
    *
    * This makes it easier to change the delimiter in the future

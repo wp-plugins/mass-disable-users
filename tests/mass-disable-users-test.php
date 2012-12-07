@@ -4,9 +4,9 @@
  * Tests all functions of the Mass Disable Users plugin
  */
 
-require_once( ABSPATH . 'wp-content/plugins/mass-disable-users/mass-disable-users.php' );
-require_once( ABSPATH . 'wp-content/plugins/mass-disable-users/inc/class-mass-disable-users-admin.php' );
-require_once( ABSPATH . 'wp-content/plugins/mass-disable-users/inc/class-mass-disable-users-utilities.php' );
+require_once( ABSPATH . '/wp-content/plugins/mass-disable-users/mass-disable-users.php' );
+require_once( ABSPATH . '/wp-content/plugins/mass-disable-users/inc/class-mass-disable-users-admin.php' );
+require_once( ABSPATH . '/wp-content/plugins/mass-disable-users/inc/class-mass-disable-users-utilities.php' );
 
 class Tests_Mass_Disable_Users extends WP_UnitTestCase {
 
@@ -67,6 +67,17 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
     $this->utility->update_exceptions( 'test@test.com' );
     $new = get_option( 'mdu_email_exceptions' );
     $this->assertFalse( $old == $new );
+
+  }
+
+  // Test retrieving mdu_email_exceptions
+  public function testEmailExceptionsRetrieve() {
+    
+    $exceptions = $this->teststring();
+    $this->utility->update_exceptions( $exceptions );
+    $return = $this->utility->get_exceptions();
+
+    $this->assertSame( $exceptions, $return );
 
   }
 

@@ -19,16 +19,11 @@ class Mass_Disable_Users_Admin {
   public function init() {
   
     // Check to see if user is a Super Admin
-    if( ! current_user_can( 'manage_network' ) )
-      die( 'Nice try!' );
 
     // Create the submenu page
     add_action( 'network_admin_menu', array( &$this, 'add_user_submenu' ) );
 
     // Load the data handlers
-    add_action( 'load-$page', array( &$this, 'admin_load' ) );
-    add_action( 'load-$page', array( &$this, 'compare_tables' ) );
-    add_action( 'load-$page', array( &$this, 'take_action' ) );
   
   }
 
@@ -59,35 +54,55 @@ class Mass_Disable_Users_Admin {
   
   }
 
-  /**
-   * Handles the email exceptions for later use
-   */
-  public function take_action() {
-  
-    if( empty( $_POST ) )
-      return;
-
-    if( isset( $_POST['exceptions'] ) ) {
-      check_admin_referrer( 'email-exceptions', '_wpnonce-email-exceptions' );
-      $this->utility->update_exceptions( $_POST['exceptions'] );
-    
-    }
-  
-  }
 
   public function render_page() {
     
+    if( isset( $_POST['submit_ex'] ) ) {
+      $exceptions = $_POST['exceptions'];
+      $this->process_exceptions( $exceptions );
+    }
+
     $html = '<div class="wrap">';
     $html .= screen_icon();
     $html .= '<h2>';
     $html .= __( 'Mass Disable Users' );
     $html .= '</h2>';
+    $html .= '<p>';
+    $html .= $this->exception_form();
+    $html .= '</p>';
     $html .= '</div><!-- end .wrap -->';
 
     echo $html;
   
   }
 
+  private function exception_form() {
+  
+    $exceptions = $this->utility->get_exceptions();
+
+    $html = '<form id="exceptions" action="" method="post">';
+    $html .= '<textarea name="exceptions" cols="40" rows="10">';
+    $html .= $exceptions;
+    $html .= '</textarea>';
+    $html .= '<br />';
+    $html .= '<input type="submit" class="button-primary" name="submit_ex" value="Update Exceptions" />';
+    $html .= '</form>';
+
+    return $html;
+  
+  }
+
+  /**
+   * Handles the email exceptions for later use
+   */
+  private function process_exceptions( $exceptions ) {
+  
+      $this->utility->update_exceptions( $exceptions );
+?>
+  <div class="updated"><p><strong><?php _e('Exceptions updated successfully!'); ?></strong></p></div>
+<?php
+    
+  }
 }
 
 $GLOBALS['mdu-admin'] = new Mass_Disable_Users_Admin;
