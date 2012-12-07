@@ -20,6 +20,8 @@ How does it work?
 
 MDU takes a list of email addresses (in CSV format) and compares it to the existing WordPress users database then any users who do not exist in the CSV file are demoted to Subscriber in every blog!
 
+NOTE: This plugin only works on multisite!
+
 == Installation ==
 
 1. Upload the `mass-disable-users` directory to `/wp-content/plugins/`
