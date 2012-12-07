@@ -80,7 +80,9 @@ class Mass_Disable_Users_Admin {
   
     $exceptions = $this->utility->get_exceptions();
 
-    $html = '<form id="exceptions" action="" method="post">';
+    $html = '<h3>Exclude email addresses</h3>';
+    $html .= '<p>One address per line</p>';
+    $html .= '<form id="exceptions" action="" method="post">';
     $html .= '<textarea name="exceptions" cols="40" rows="10">';
     $html .= $exceptions;
     $html .= '</textarea>';

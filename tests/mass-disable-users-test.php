@@ -64,7 +64,7 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
     
     $this->utility->add_options();
     $old = get_option( 'mdu_email_exceptions' );
-    $this->utility->update_exceptions( 'test@test.com' );
+    $this->utility->update_exceptions( 'exception1@example.com' );
     $new = get_option( 'mdu_email_exceptions' );
     $this->assertFalse( $old == $new );
 
@@ -90,6 +90,109 @@ class Tests_Mass_Disable_Users extends WP_UnitTestCase {
 
     $actual = $this->utility->string_to_array( $string );
     $expected = $this->testarray();
+
+    $this->assertSame( $expected, $actual );
+  
+  }
+
+  // Test finding blogs of which the user is a member
+  public function testFindUserBlogs () {
+  
+    $user_id = $this->factory->user->create( array( 'role' => 'editor' ) );
+
+    $blog_ids = $this->factory->blog->create_many( 4 );
+    $blog_ids[0] = 1;
+
+    foreach ( $blog_ids as $blog ) {
+      add_user_to_blog( $blog, $user, 'editor' );
+    }
+    
+    $this->utility->process_user_blogs( $user_id );
+
+    foreach ( $blog_ids as $blog ) {
+      $user = new WP_User( $user_id );
+
+      if ( ! $user->has_cap( 'read' ) ) {
+        $actual[$blog] = 'disabled';
+      }
+
+      $expected[$blog] = 'disabled';
+    }
+
+
+    $this->assertSame( $expected, $actual );
+
+  }
+
+  // Test finding a user 
+  public function testUserDisable() {
+
+    $users = array();
+    foreach ( array( 'administrator', 'editor', 'author', 'contributor' ) as $role ) {
+      $id = $this->factory->user->create( array( 'role' => $role ) );
+      $users[$id] = $id;
+    }
+
+    foreach ( $users as $user ) {
+      $this->utility->disable_user( $user );
+    }
+
+    foreach ( $users as $id ) {
+      $user = new WP_User( $id );
+
+      if ( ! $user->has_cap('read') ) {
+        $users[$id] = 'disabled';
+      }
+      // Create the expected array based on the ID's of the created users
+      $expected[$id] = 'disabled';
+    }
+
+    $actual = $users;
+
+    $this->assertSame( $expected, $actual );
+
+
+  }
+
+  // Test getting data from CSV
+  public function testCSVData () {
+  
+    $path = dirname(__FILE__);
+    $file = $path . '/test.csv';
+  
+    $actual = $this->utility->parse_csv( $file );
+
+    $expected = array(
+      'test1@example.com',
+      'test2@example.com',
+      'test3@example.com',
+      'exception1@example.com',
+      'exception2@example.com'
+    );
+
+    $this->assertSame( $expected, $actual );
+  }
+
+  // Test comparing exceptions and CSV contents
+  public function testExceptionCompare () {
+  
+    $this->utility->add_options();
+    $exceptions = array(
+      'exception1@example.com',
+      'exception2@example.com'
+    );
+    update_option( 'mdu_email_exceptions', $exceptions );
+
+    $path = dirname(__FILE__);
+    $filename = $path . '/test.csv';
+    $exceptions = get_option('mdu_email_exceptions');
+    $actual = $this->utility->compare_users( $filename, $exceptions );
+
+    $expected = array(
+      'test1@example.com',
+      'test2@example.com',
+      'test3@example.com'
+    );
 
     $this->assertSame( $expected, $actual );
   

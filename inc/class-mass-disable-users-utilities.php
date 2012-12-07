@@ -40,6 +40,67 @@ class Mass_Disable_Users_Utilities {
   }
 
   /**
+   * Parses the CSV into array
+   *
+   * @param string $filename Path to CSV file
+   *
+   * @returns array $users Users in the CSV
+   */
+  public function parse_csv( $filename ) {
+  
+    $file = fopen( $filename, 'r' );
+    $file = fread( $file, filesize($filename) );
+    $users = str_getcsv( $file );
+
+    return $users;
+  
+  }
+
+  /**
+   * Compares exceptions with provided CSV of users to disable
+   *
+   * @param string $filename
+   * @param array $exceptions
+   * @returns array $users Users to disable
+   */
+  public function compare_users( $filename, $exceptions ) {
+  
+    $csv = $this->parse_csv( $filename );
+
+    $users = array_diff( $csv, $exceptions);
+
+    return $users;
+  
+  }
+
+  /**
+   * Find and loop through a user's blogs
+   * 
+   * @param int $user The user's ID
+   */
+  public function process_user_blogs( $user ) {
+  
+    $user_blogs = get_blogs_of_user( $user );
+    foreach ( $user_blogs as $blog ) {
+      switch_to_blog( $blog->userblog_id );
+      $this->disable_user( $user );
+    }
+  
+  }
+
+  /**
+   * Changes the given user to subscriber
+   *
+   * @param int $user
+   */
+  public function disable_user( $user ) {
+  
+      $user = new WP_User( $user );
+      $user->remove_all_caps();
+  
+  }
+
+  /**
    * Wrapper for explode()
    *
    * This makes it easier to change the delimiter in the future
