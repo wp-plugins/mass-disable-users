@@ -35,6 +35,7 @@ class Mass_Disable_Users_Utilities {
   
     $exceptions = get_option( 'mdu_email_exceptions' );
     $exceptions = $this->array_to_string( $exceptions );
+
     return $exceptions;
     
   }
