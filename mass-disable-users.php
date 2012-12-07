@@ -22,6 +22,9 @@ if( ! array_key_exists( 'mass-disable-users', $GLOBALS ) ) {
       $this->utilities = new Mass_Disable_Users_Utilities;
       $this->admin = new Mass_Disable_Users_Admin;
 
+      // Add submenu to Network Users
+      add_action( 'network_admin_menu', array( $this->admin, 'add_user_submenu' ) );
+
     } // end function __construct()
 
   } // end class Mass_Disable_Users
